@@ -1,10 +1,11 @@
+//clean up the file and find the null. 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class PhoneBook {
@@ -12,10 +13,15 @@ public class PhoneBook {
     private FastScanner in = new FastScanner();
     // Keep list of all existing (i.e. not deleted yet) contacts.
     //private List<Contact> contacts = new ArrayList<>();
-	private List<Contact> contacts;
+    private List<Contact> contacts;
+    private Map<Integer,String> mapContact;
 
     public static void main(String[] args) {
         new PhoneBook().processQueries();
+    }
+
+    public PhoneBook() {
+        this.mapContact = new HashMap<>();
     }
 
     private Query readQuery() {
@@ -39,37 +45,49 @@ public class PhoneBook {
             // if we already have contact with such number,
             // we should rewrite contact's name
             boolean wasFound = false;
-            for (Contact contact : contacts)
-                if (contact.number == query.number) {
-                    contact.name = query.name;
-                    wasFound = true;
-                    break;
-                }
+            if(mapContact.containsKey(query.number)){
+                mapContact.replace(query.number, query.name);
+                wasFound = true;
+            }
+//            for (Contact contact : contacts)
+//                if (contact.number == query.number) {
+//                    contact.name = query.name;                    
+//                    wasFound = true;
+//                    break;
+//                }            
             // otherwise, just add it
+//            if (!wasFound)
+//                contacts.add(new Contact(query.name, query.number));
             if (!wasFound)
-                contacts.add(new Contact(query.name, query.number));
+                mapContact.put(query.number, query.name);
         } else if (query.type.equals("del")) {
-            for (Iterator<Contact> it = contacts.iterator(); it.hasNext(); )
-                if (it.next().number == query.number) {
-                    it.remove();
-                    break;
-                }
+//            for (Iterator<Contact> it = contacts.iterator(); it.hasNext(); )
+//                if (it.next().number == query.number) {
+//                    it.remove();
+//                    break;
+//                }
+            if(mapContact.containsKey(query.number))
+                mapContact.remove(query.number);
         } else {
             String response = "not found";
-            for (Contact contact: contacts)
-                if (contact.number == query.number) {
-                    response = contact.name;
-                    break;
-                }
+//            for (Contact contact: contacts)
+//                if (contact.number == query.number) {
+//                    response = contact.name;
+//                    break;
+//                }
+            if(mapContact.containsKey(query.number)){
+                response = mapContact.get(query.number);
+            }
             writeResponse(response);
         }
     }
 
     public void processQueries() {
         int queryCount = in.nextInt();
-		contacts = new ArrayList<>(queryCount*2);
+        contacts = new ArrayList<>(queryCount);
+        //Map<Integer,String> mapContact = contacts.stream().collect(Collectors.toMap(Contact::GetNumber, Contact::GetName));
         for (int i = 0; i < queryCount; ++i)
-            processQuery(readQuery());
+            processQuery(readQuery());                
     }
 
     static class Contact {
@@ -79,6 +97,14 @@ public class PhoneBook {
         public Contact(String name, int number) {
             this.name = name;
             this.number = number;
+        }
+        
+        public String GetName(){
+            return this.name;
+        }
+        
+        public int GetNumber(){
+            return this.number;
         }
     }
 

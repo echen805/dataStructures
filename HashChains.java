@@ -10,13 +10,10 @@ package hashchains;
  * @author Ed
  */
 import java.io.*;
-import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.StringTokenizer;
 
 public class HashChains {
@@ -30,17 +27,13 @@ public class HashChains {
     private int prime = 1000000007;
     private int multiplier = 263;
 
-    private Map<Long,AbstractQueue> mapTest;
+    private Map<Long,List<String>> mapTest = new HashMap<>();
     
     public static void main(String[] args) throws IOException {
         new HashChains().processQueries();
     }
 
-    public HashChains() {
-        this.mapTest = new HashMap<>();
-    }
-
-    private long hashFunc(String s) {
+    public Long hashFunc(String s) {
         long hash = 0;
         for (int i = s.length() - 1; i >= 0; --i)
             hash = (hash * multiplier + s.charAt(i)) % prime;
@@ -54,7 +47,7 @@ public class HashChains {
             return new Query(type, s); // separates the queries to everything besides "check"
         } else {
             long ind = in.nextLong();
-            return new Query(type, ind); // create a key-value pair where ind is the index of the list
+            return new Query(type, ind); // create a key-value pair for check to find the index
         }
     }
 
@@ -64,36 +57,44 @@ public class HashChains {
         // out.flush();
     }
 
-    private void processQuery(Query query) {
+    private List<String> trimListValue (List<String> ListInput){
+        List<String> trimmedString;
+        
+        ListInput.toString().replaceAll(",","");
+        ListInput.toString().replaceAll("[","");
+        ListInput.toString().replaceAll("]","");
+        
+        trimmedString = ListInput;
+        
+        return trimmedString;
+    }
+    
+    private void processQuery(Query query) {                                
         switch (query.type) {
             case "add":
-//                if (!elems.contains(query.s))
-//                    elems.add(0, query.s); // Zero is just a place holder because the values are searched via query.ind
-                if(!mapTest.containsValue(query.s)){  
-                    Queue temp = new AbstractQueue();
-                    mapTest.put(long(0),new Query(query.ind,query.s));
+                if(!elems.contains(query.s)){                      
+                    elems.add(0,query.s);
+                    mapTest.put(hashFunc(query.s),elems);
                 }
                 break;
             case "del":
-//                if (elems.contains(query.s))
-//                    elems.remove(query.s);
-                if (mapTest.containsValue(query.s))
-                    mapTest.remove(query.s);
+                if (elems.contains(query.s))
+                    elems.remove(query.s);                                
                 break;
             case "find":
-//                writeSearchResult(elems.contains(query.s));
-                writeSearchResult(mapTest.containsValue(query.s)); // if it contains value query.s, output yes otherwise no
+                writeSearchResult(elems.contains(query.s));
                 break;
-            case "check":
-//                for (String cur : elems)
-//                    if (hashFunc(cur) == query.ind)
-//                        out.print(cur + " ");
-                if(mapTest.containsKey(query.ind))                                        
-                    out.print(mapTest.get(query.ind));
+            case "check":               
+                if(mapTest.containsKey(query.ind)){                                        
+                    String listValue = mapTest.get(query.ind).toString();
+                    out.print(listValue + "\n");
+//                    out.print(trimListValue(mapTest.get(query.ind)) + "\n");
+                    
+                }
                 else                    
                     out.println();
                 // Uncomment the following if you want to play with the program interactively.
-                // out.flush();
+//                out.flush();
                 break;
             default:
                 throw new RuntimeException("Unknown query: " + query.type);
@@ -101,7 +102,7 @@ public class HashChains {
     }
 
     public void processQueries() throws IOException {
-        elems = new ArrayList<>();
+        elems = new ArrayList<>();        
         in = new FastScanner();
         out = new PrintWriter(new BufferedOutputStream(System.out));
         bucketCount = in.nextLong();

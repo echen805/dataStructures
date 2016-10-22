@@ -1,16 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package hashchains;
-
-/**
- *
- * @author Ed
- */
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,23 +11,65 @@ public class HashChains {
     private FastScanner in;
     private PrintWriter out;
     // store all strings in one list
-    private List<String> elems;
+    private ArrayList<LinkedList<String>> elems;
     // for hash function
-    private long bucketCount;
+    private int bucketCount;
     private int prime = 1000000007;
     private int multiplier = 263;
-
-    private Map<Long,List<String>> mapTest = new HashMap<>();
     
     public static void main(String[] args) throws IOException {
         new HashChains().processQueries();
     }
-
-    public Long hashFunc(String s) {
+    
+    // find, add, check, delete
+    private LinkedList<String> getBucket (String value) {
+        int bucketNumber = (int)this.hashFunc(value);
+        return elems.get(bucketNumber);
+    }
+    
+    public void add(String value) {
+        LinkedList<String> bucket = getBucket(value);
+        if(bucket.contains(value)){}
+        else{
+            bucket.push(value);
+        }
+    }
+    
+    public void find(String value){
+        LinkedList<String> bucket = getBucket(value);        
+        if(bucket.contains(value)){
+            out.print("yes" + "\n");
+        }
+        else{
+            out.print("no" + "\n");
+        }                    
+    }
+    
+    public void delete (String value){
+        LinkedList<String> bucket = getBucket(value);
+        bucket.remove(value);
+    }
+    
+    public void check (int indexOfList){
+        LinkedList<String> bucket = elems.get(indexOfList);
+        if(bucket.isEmpty()) {
+            out.println();
+        }
+        else {
+            for (String cur : bucket){                                    
+                out.print(cur + " ");                
+            }
+            out.println();
+        }
+    }
+    
+    
+    
+    private int hashFunc(String s) {
         long hash = 0;
         for (int i = s.length() - 1; i >= 0; --i)
             hash = (hash * multiplier + s.charAt(i)) % prime;
-        return hash % bucketCount;
+        return (int)hash % bucketCount;
     }
 
     private Query readQuery() throws IOException {
@@ -46,7 +78,7 @@ public class HashChains {
             String s = in.next();
             return new Query(type, s); // separates the queries to everything besides "check"
         } else {
-            long ind = in.nextLong();
+            int ind = in.nextInt();
             return new Query(type, ind); // create a key-value pair for check to find the index
         }
     }
@@ -55,58 +87,40 @@ public class HashChains {
         out.println(wasFound ? "yes" : "no");
         // Uncomment the following if you want to play with the program interactively.
         // out.flush();
-    }
-
-    private List<String> trimListValue (List<String> ListInput){
-        List<String> trimmedString;
         
-        ListInput.toString().replaceAll(",","");
-        ListInput.toString().replaceAll("[","");
-        ListInput.toString().replaceAll("]","");
-        
-        trimmedString = ListInput;
-        
-        return trimmedString;
-    }
+    }          
     
-    private void processQuery(Query query) {                                
+    private void processQuery(Query query) {
+//        outputBuckets(elems);
         switch (query.type) {
-            case "add":
-                if(!elems.contains(query.s)){                      
-                    elems.add(0,query.s);
-                    mapTest.put(hashFunc(query.s),elems);
-                }
+            case "add":                                
+                add(query.s);
                 break;
             case "del":
-                if (elems.contains(query.s))
-                    elems.remove(query.s);                                
+                delete(query.s);
                 break;
             case "find":
-                writeSearchResult(elems.contains(query.s));
+                find(query.s);
                 break;
             case "check":               
-                if(mapTest.containsKey(query.ind)){                                        
-                    String listValue = mapTest.get(query.ind).toString();
-                    out.print(listValue + "\n");
-//                    out.print(trimListValue(mapTest.get(query.ind)) + "\n");
-                    
-                }
-                else                    
-                    out.println();
-                // Uncomment the following if you want to play with the program interactively.
-//                out.flush();
+                check(query.ind);
                 break;
             default:
                 throw new RuntimeException("Unknown query: " + query.type);
         }
     }
 
-    public void processQueries() throws IOException {
-        elems = new ArrayList<>();        
+    public void processQueries() throws IOException {                
         in = new FastScanner();
         out = new PrintWriter(new BufferedOutputStream(System.out));
-        bucketCount = in.nextLong();
-        long queryCount = in.nextLong();
+        bucketCount = in.nextInt();        
+        elems = new ArrayList<LinkedList<String>>(bucketCount);
+                
+        for (int i = 0; i < bucketCount; i++) {
+            elems.add(i, new LinkedList<String>());
+        }
+        
+        int queryCount = in.nextInt();
         for (int i = 0; i < queryCount; ++i) {
             processQuery(readQuery());
         }
@@ -116,14 +130,14 @@ public class HashChains {
     static class Query {
         String type;
         String s;
-        long ind;
+        int ind;
 
         public Query(String type, String s) {
             this.type = type;
             this.s = s;
         }
 
-        public Query(String type, long ind) {
+        public Query(String type, int ind) {
             this.type = type;
             this.ind = ind;
         }
@@ -147,6 +161,10 @@ public class HashChains {
 
         public long nextLong() throws IOException {
             return Long.parseLong(next());
+        }
+        
+        public int nextInt() throws IOException {
+            return Integer.parseInt(next());
         }
     }
 }
